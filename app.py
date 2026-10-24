@@ -15,7 +15,7 @@ with st.sidebar:
 left,right=st.columns([1,1],gap='large')
 with left:
     section("01","Tu boceto","Ratón o pantalla táctil")
-    canvas=st_canvas(fill_color='rgba(255,138,76,0.25)',stroke_width=stroke,stroke_color='#000000',background_color='#FFFFFF',height=320,width=320,drawing_mode='freedraw',key='canvas')
+    canvas=st_canvas(fill_color='rgba(255,138,76,0.25)',stroke_width=stroke,stroke_color='#000000',background_color='#FFFFFF',height=320,width=320,drawing_mode='freedraw',return_image_data=True,key='canvas')
     key=st.text_input("Clave de OpenAI",type='password')
     analyze=st.button("Interpretar boceto",type='primary')
 

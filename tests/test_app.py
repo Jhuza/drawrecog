@@ -1,6 +1,6 @@
 from pathlib import Path
-from types import SimpleNamespace
-from unittest.mock import patch
+from types import SimpleNamespace, ModuleType
+from unittest.mock import patch, Mock
 import sys
 import numpy as np
 from streamlit.testing.v1 import AppTest
@@ -12,7 +12,9 @@ sys.path.insert(0, str(ROOT))
 def test_blank_key_drawing_request_and_stale_result():
     canvas = SimpleNamespace(image_data=np.full((32,32,4),255,dtype=np.uint8), json_data={'objects':[]})
     result = SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content='Una línea diagonal.'))])
-    with patch('streamlit_drawable_canvas.st_canvas',return_value=canvas), patch('openai.OpenAI') as client:
+    module=ModuleType('streamlit_drawable_canvas')
+    module.st_canvas=Mock(return_value=canvas)
+    with patch.dict(sys.modules,{'streamlit_drawable_canvas':module}), patch('openai.OpenAI') as client:
         client.return_value.__enter__.return_value.chat.completions.create.return_value=result
         app = AppTest.from_file(str(ROOT/'app.py')).run(timeout=30)
         app.button[0].click().run()
@@ -25,6 +27,7 @@ def test_blank_key_drawing_request_and_stale_result():
         app.run()
         app.button[0].click().run()
         assert not app.exception
+        assert module.st_canvas.call_args.kwargs['return_image_data'] is True
         request=client.return_value.__enter__.return_value.chat.completions.create.call_args.kwargs
         assert request['model']=='gpt-4o-mini' and request['max_tokens']==500
         assert request['messages'][0]['content'][1]['image_url']['url'].startswith('data:image/png;base64,')
